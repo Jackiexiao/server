@@ -1347,7 +1347,7 @@ def create_docker_build_script(script_name, container_install_dir,
         ]
         
         if proxy_url is not None:
-            proxy = f'--network host --build-arg HTTP_PROXY=http://127.0.0.1:{proxy_url} --build-arg HTTPS_PROXY=http://{proxy_url}'
+            proxy = f'--network host --build-arg HTTP_PROXY=http://{proxy_url} --build-arg HTTPS_PROXY=http://{proxy_url}'
         else:
             proxy = ''
 
