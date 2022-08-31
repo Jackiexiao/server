@@ -1325,7 +1325,7 @@ def create_build_dockerfiles(container_build_dir, images, backends, repoagents,
 
 
 def create_docker_build_script(script_name, container_install_dir,
-                               container_ci_dir):
+                               container_ci_dir, proxy_url):
     with BuildScript(
             os.path.join(FLAGS.build_dir, script_name),
             verbose=FLAGS.verbose,
@@ -1345,10 +1345,15 @@ def create_docker_build_script(script_name, container_install_dir,
             'tritonserver_buildbase', 'tritonserver_buildbase_cache0',
             'tritonserver_buildbase_cache1'
         ]
+        
+        if proxy_url is not None:
+            proxy = f'--network host --build-arg HTTP_PROXY=http://127.0.0.1:{proxy_url} --build-arg HTTPS_PROXY=http://{proxy_url}'
+        else:
+            proxy = ''
 
         baseargs = [
             'docker', 'build', '-t', 'tritonserver_buildbase', '-f',
-            os.path.join(FLAGS.build_dir, 'Dockerfile.buildbase')
+            os.path.join(FLAGS.build_dir, 'Dockerfile.buildbase'), proxy
         ]
 
         if not FLAGS.no_container_pull:
@@ -1440,7 +1445,7 @@ def create_docker_build_script(script_name, container_install_dir,
 
         finalargs = [
             'docker', 'build', '-t', 'tritonserver', '-f',
-            os.path.join(FLAGS.build_dir, 'Dockerfile'), '.'
+            os.path.join(FLAGS.build_dir, 'Dockerfile'), proxy, '.'
         ]
 
         docker_script.cwd(THIS_SCRIPT_DIR)
@@ -1456,7 +1461,7 @@ def create_docker_build_script(script_name, container_install_dir,
 
         cibaseargs = [
             'docker', 'build', '-t', 'tritonserver_cibase', '-f',
-            os.path.join(FLAGS.build_dir, 'Dockerfile.cibase'), '.'
+            os.path.join(FLAGS.build_dir, 'Dockerfile.cibase'), proxy, '.'
         ]
 
         docker_script.cwd(THIS_SCRIPT_DIR)
@@ -2031,6 +2036,12 @@ if __name__ == '__main__':
         help=
         'Override specified backend CMake argument in the build as <backend>:<name>=<value>. The argument is passed to CMake as -D<name>=<value>. This flag only impacts CMake arguments that are used by build.py. To unconditionally add a CMake argument to the backend build use --extra-backend-cmake-arg.'
     )
+    parser.add_argument(
+        '--proxy',
+        required=False,
+        type=str,
+        default=None,
+        help='docker build proxy, etc. 127.0.0.1:7890')
 
     FLAGS = parser.parse_args()
 
@@ -2367,7 +2378,7 @@ if __name__ == '__main__':
         create_build_dockerfiles(script_build_dir, images, backends, repoagents,
                                  FLAGS.endpoint)
         create_docker_build_script(script_name, script_install_dir,
-                                   script_ci_dir)
+                                   script_ci_dir, FLAGS.proxy)
 
     # In not dry-run, execute the script to perform the build...  If a
     # container-based build is requested use 'docker_build' script,
