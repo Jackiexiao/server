@@ -1347,13 +1347,15 @@ def create_docker_build_script(script_name, container_install_dir,
         ]
         
         if proxy_url is not None:
-            proxy = f'--network host --build-arg HTTP_PROXY=http://{proxy_url} --build-arg HTTPS_PROXY=http://{proxy_url}'
+            build_proxy = f'--network host --build-arg HTTP_PROXY=http://{proxy_url} --build-arg HTTPS_PROXY=http://{proxy_url}'
+            run_proxy = f'--network host --env HTTP_PROXY="http://{proxy_url}" --env HTTPS_PROXY="http://{proxy_url}" '
         else:
-            proxy = ''
+            build_proxy = ''
+            run_proxy = ''
 
         baseargs = [
             'docker', 'build', '-t', 'tritonserver_buildbase', '-f',
-            os.path.join(FLAGS.build_dir, 'Dockerfile.buildbase'), proxy
+            os.path.join(FLAGS.build_dir, 'Dockerfile.buildbase'), build_proxy
         ]
 
         if not FLAGS.no_container_pull:
@@ -1389,7 +1391,7 @@ def create_docker_build_script(script_name, container_install_dir,
         # Docker (i.e. docker-in-docker) and not just if run directly
         # from host.
         runargs = [
-            'docker', 'run', '-w', '/workspace/build', '--name',
+            'docker', 'run', '-w', '/workspace/build', run_proxy, '--name',
             'tritonserver_builder'
         ]
 
@@ -1445,7 +1447,7 @@ def create_docker_build_script(script_name, container_install_dir,
 
         finalargs = [
             'docker', 'build', '-t', 'tritonserver', '-f',
-            os.path.join(FLAGS.build_dir, 'Dockerfile'), proxy, '.'
+            os.path.join(FLAGS.build_dir, 'Dockerfile'), build_proxy, '.'
         ]
 
         docker_script.cwd(THIS_SCRIPT_DIR)
@@ -1461,7 +1463,7 @@ def create_docker_build_script(script_name, container_install_dir,
 
         cibaseargs = [
             'docker', 'build', '-t', 'tritonserver_cibase', '-f',
-            os.path.join(FLAGS.build_dir, 'Dockerfile.cibase'), proxy, '.'
+            os.path.join(FLAGS.build_dir, 'Dockerfile.cibase'), build_proxy, '.'
         ]
 
         docker_script.cwd(THIS_SCRIPT_DIR)

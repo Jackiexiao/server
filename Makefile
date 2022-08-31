@@ -16,7 +16,7 @@ build_cpu_onnx: # + python + ensemble
 		--enable-logging --enable-stats --enable-tracing --enable-metrics \
 		--endpoint=http --endpoint=grpc \
 		--backend=ensemble \
-		--backend=python: \
+		--backend=python \
 		--backend=onnxruntime
 
 build_cpu_sim: # tf2 / torch / onnx + python + ensemble
