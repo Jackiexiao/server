@@ -2,7 +2,7 @@
 # see: https://github.com/triton-inference-server/server/blob/main/docs/build.md
 
 version="22.06" 
-proxy_url="127.0.0.1:7890"
+proxy_url="192.168.10.68:7890"
 
 checkout:
 	git checkout r${version}

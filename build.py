@@ -938,6 +938,15 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
       cmake-data=3.21.1-0kitware1ubuntu20.04.1 cmake=3.21.1-0kitware1ubuntu20.04.1
 '''
 
+        if FLAGS.proxy:
+            df += (
+r'''RUN mkdir -p ~/.docker && echo '{\n    "proxies": {\n        "default": {\n            "httpProxy": "http://''' 
++ FLAGS.proxy + 
+r'''",\n            "httpsProxy": "http://''' 
++ FLAGS.proxy + 
+r'''",\n            "noProxy": "docker,127.0.0.1"\n        }\n    }\n}\n' | tee ~/.docker/config.json
+''')
+
         if FLAGS.enable_gpu:
             df += install_dcgm_libraries(argmap['DCGM_VERSION'],
                                          target_machine())
@@ -1325,7 +1334,7 @@ def create_build_dockerfiles(container_build_dir, images, backends, repoagents,
 
 
 def create_docker_build_script(script_name, container_install_dir,
-                               container_ci_dir, proxy_url):
+                               container_ci_dir):
     with BuildScript(
             os.path.join(FLAGS.build_dir, script_name),
             verbose=FLAGS.verbose,
@@ -1346,9 +1355,9 @@ def create_docker_build_script(script_name, container_install_dir,
             'tritonserver_buildbase_cache1'
         ]
         
-        if proxy_url is not None:
-            build_proxy = f'--network host --build-arg HTTP_PROXY=http://{proxy_url} --build-arg HTTPS_PROXY=http://{proxy_url}'
-            run_proxy = f'--network host --env HTTP_PROXY="http://{proxy_url}" --env HTTPS_PROXY="http://{proxy_url}" '
+        if FLAGS.proxy:
+            build_proxy = f'--network host --build-arg HTTP_PROXY=http://{FLAGS.proxy} --build-arg HTTPS_PROXY=http://{FLAGS.proxy}'
+            run_proxy = f'--network host --env HTTP_PROXY="http://{FLAGS.proxy}" --env HTTPS_PROXY="http://{FLAGS.proxy}" '
         else:
             build_proxy = ''
             run_proxy = ''
@@ -2043,7 +2052,7 @@ if __name__ == '__main__':
         required=False,
         type=str,
         default=None,
-        help='docker build proxy, etc. 127.0.0.1:7890')
+        help='docker build proxy, etc. 192.168.3.6:7890, do not use 127.0.0.1')
 
     FLAGS = parser.parse_args()
 
@@ -2380,7 +2389,7 @@ if __name__ == '__main__':
         create_build_dockerfiles(script_build_dir, images, backends, repoagents,
                                  FLAGS.endpoint)
         create_docker_build_script(script_name, script_install_dir,
-                                   script_ci_dir, FLAGS.proxy)
+                                   script_ci_dir)
 
     # In not dry-run, execute the script to perform the build...  If a
     # container-based build is requested use 'docker_build' script,
