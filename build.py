@@ -940,11 +940,11 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
 
         if FLAGS.proxy:
             df += (
-r'''RUN mkdir -p ~/.docker && echo '{\n    "proxies": {\n        "default": {\n            "httpProxy": "http://''' 
+r'''RUN mkdir -p ~/.docker && echo '{"proxies": {"default": {"httpProxy": "http://''' 
 + FLAGS.proxy + 
-r'''",\n            "httpsProxy": "http://''' 
+r'''","httpsProxy": "http://''' 
 + FLAGS.proxy + 
-r'''",\n            "noProxy": "docker,127.0.0.1"\n        }\n    }\n}\n' | tee ~/.docker/config.json
+r'''","noProxy": "docker,127.0.0.1"}}}' | tee ~/.docker/config.json
 ''')
 
         if FLAGS.enable_gpu:
