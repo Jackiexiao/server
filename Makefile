@@ -1,4 +1,4 @@
-# build triton-image
+# build triton-image using proxy
 # see: https://github.com/triton-inference-server/server/blob/main/docs/build.md
 
 version="22.06"
@@ -34,6 +34,20 @@ build_cpu_sim: # tf2 / torch / onnx + python + ensemble
 		--backend=tensorflow2 \
 		--backend=onnxruntime 
 	docker tag tritonserver:latest tritonserver:${version}-tf2-torch-onnx-py-cpu
+
+# https://github.com/triton-inference-server/server/issues/4134
+build_cpu_sim_tf1: # cpu: tf1 / torch / onnx + python + ensemble
+	python3 build.py  \
+		--proxy ${proxy_url} \
+		--enable-logging --enable-stats --enable-tracing --enable-metrics \
+		--endpoint=http --endpoint=grpc \
+		--image=gpu-base,nvcr.io/nvidia/tritonserver:${version}-py3-min \
+		--backend=ensemble \
+		--backend=python \
+		--backend=pytorch \
+		--backend=tensorflow1 \
+		--backend=onnxruntime 
+	docker tag tritonserver:latest tritonserver:${version}-tf1-torch-onnx-py-cpu
 
 build_cpu_sim_debug: # tf2 / torch / onnx + python + ensemble
 	python3 build.py  \
